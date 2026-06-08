@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Cairo", system-ui, sans-serif;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-accent-300: #fcd34d;
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+  --color-dark-800: #0f172a;
+  --color-dark-900: #020617;
+  --color-glass-bg: rgba(15, 23, 42, 0.4);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-glass-border-hover: rgba(56, 189, 248, 0.3);
+}
+
+@layer base {
+  body {
+    @apply bg-dark-900 text-white font-sans antialiased;
+    direction: rtl;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-glass-bg backdrop-blur-md border border-glass-border rounded-2xl shadow-xl transition-all duration-300;
+  }
+  .glass-card:hover {
+    @apply -translate-y-1 border-glass-border-hover shadow-2xl;
+  }
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-l from-white via-primary-400 to-accent-400;
+  }
+  .btn-primary {
+    @apply px-6 py-3 rounded-xl bg-gradient-to-l from-primary-600 to-primary-400 hover:from-primary-500 hover:to-primary-300 text-white font-bold shadow-lg shadow-primary-500/40 hover:shadow-xl hover:shadow-primary-500/60 transition-all duration-300 transform hover:-translate-y-0.5;
+  }
+  .btn-accent {
+    @apply px-6 py-3 rounded-xl bg-gradient-to-l from-accent-600 to-accent-400 hover:from-accent-500 hover:to-accent-300 text-white font-bold shadow-lg shadow-accent-500/40 hover:shadow-xl hover:shadow-accent-500/60 transition-all duration-300 transform hover:-translate-y-0.5;
+  }
+  .btn-glass {
+    @apply px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-medium backdrop-blur-sm transition-all duration-300;
+  }
+  .nav-glass {
+    @apply bg-dark-900/60 backdrop-blur-lg border-b border-glass-border sticky top-0 z-50;
+  }
+}
