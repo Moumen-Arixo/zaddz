@@ -257,16 +257,33 @@ const PORT = process.env.PORT || 3000;
       // Convert "Big Pickle" to "big-pickle" as per opencode API supports
       const targetModel = (model === "Big Pickle" || model === "big-pickle") ? "big-pickle" : model;
 
-      const response = await fetch(baseUrl, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          model: targetModel,
-          messages: apiMessages
-        })
-      });
+      // Set a timeout to prevent Vercel Serverless function from timing out (10s max on Hobby tier)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8500); // 8.5 seconds
 
-      const data = await response.json();
+      let response;
+      try {
+        response = await fetch(baseUrl, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            model: targetModel,
+            messages: apiMessages
+          }),
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      const textData = await response.text();
+      let data;
+      try {
+        data = JSON.parse(textData);
+      } catch (e) {
+        throw new Error(`Invalid JSON from AI provider: ${textData.substring(0, 100)}...`);
+      }
+
       if (!response.ok) {
         throw new Error(data.error?.message || "AI API Error: " + response.statusText);
       }
@@ -324,8 +341,8 @@ const PORT = process.env.PORT || 3000;
   });
 
   // Google Drive OAuth Routes
-  const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-  const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.client_id;
+  const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || process.env.client_secret;
 
   app.get("/api/gdrive/auth-url", (req, res) => {
     // We expect the frontend to pass the exact redirect URI based on its window.location
@@ -348,14 +365,22 @@ const PORT = process.env.PORT || 3000;
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
-          client_id: GOOGLE_CLIENT_ID,
-          client_secret: GOOGLE_CLIENT_SECRET,
+          client_id: GOOGLE_CLIENT_ID || "",
+          client_secret: GOOGLE_CLIENT_SECRET || "",
           code,
           grant_type: "authorization_code",
           redirect_uri: redirectUri
         })
       });
-      const data = await response.json();
+      
+      const textData = await response.text();
+      let data;
+      try {
+        data = JSON.parse(textData);
+      } catch (e) {
+        throw new Error(`Invalid JSON from OAuth provider: ${textData.substring(0, 100)}...`);
+      }
+      
       if (!response.ok) {
         throw new Error(data.error_description || "Failed to exchange code");
       }
